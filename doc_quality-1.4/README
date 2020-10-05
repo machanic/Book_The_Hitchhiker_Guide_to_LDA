@@ -1,0 +1,16 @@
+1.启动memcached
+/data0/memcached-1.4.20/memcached -d -m 10480 -p 12121 -P /tmp/LDA_memcached.pid
+2.编译和安装主程序
+#修改下setup.py里引用python的lib库的路径
+python setup.py build
+#这一步如果报错：fPIC问题，则需要重新编译python。使用./configure --enable-shared编译
+python setup.py install
+3.进入解压tar包后的目录,灌入数据(可选)
+修改save_to_memcached.py里的mc = Client(("127.0.0.1",12121))一句话，改为你启动memcache的端口号
+python save_to_memcached.py
+4.参看test_client调用
+就一个函数是关键函数:doc_quality_score(cache, url, title, content, all_content="",is_tokenized=True)
+如果你已经分好词，直接使用all_content第三个参数传入空格隔开的词(此时title="",content="");is_tokenized=True。
+
+里面的第一个参数需要传入mc = Client(("127.0.0.1",12121))
+PS:请使用类似multiprocessing 多线程调用
