@@ -1,0 +1,257 @@
+<html>
+<head>
+<title>list</title>
+<meta http-equiv="content-type" content="text/html;charset=utf-8" />
+
+<script type="text/javascript" src="/res/js/jquery-ui-1.10.4/js/jquery-1.10.2.js"></script>
+
+<script type="text/javascript" src="/res/js/list/list.js"></script>
+
+<script type="text/javascript" src="/res/js/highlight/highlight.js"></script>
+
+<script type="text/javascript" src="/res/js/contextmenu/jquery.contextmenu.js"></script>
+
+<script type="text/javascript" src="/res/js/zdialog/zDrag.js"></script>
+<script type="text/javascript" src="/res/js/zdialog/zDialog.js"></script>
+<script type="text/javascript" src="/res/js/utils/json2.js"></script>
+
+<script type="text/javascript" src="/res/js/utils/string_utils.js"></script>
+
+
+<script type="text/javascript" src="/res/js/bootstrap/bootstrap.min.js"></script>
+
+
+<!-- jquery ui -->
+<link rel="stylesheet" href="/res/js/jquery-ui-1.10.4/css/redmond/jquery-ui-1.10.4.custom.css" />
+
+
+
+
+<script src="/res/js/jquery-ui-1.10.4/js/jquery-1.10.2.js"></script>
+<script src="/res/js/jquery-ui-1.10.4/js/jquery-ui-1.10.4.custom.js"></script>  
+
+
+<link rel="stylesheet" type="text/css" href="/res/skin/all.css" />
+
+<style type-text="css">
+	.selected_words span{
+		line-height: 30px;
+	}
+</style>
+
+
+<script>
+
+
+	$(function() {
+	
+
+
+		$("td[type='select_word'] .selected_words").children().click(function(){
+				var id = $(this).parents("tr").attr("id");
+				
+				var other = $(".typical_words[name='"+id+"'] .label:contains('"+ $(this).html() + "')").html();
+
+				$(".typical_words[name='"+id+"'] .label:contains('"+ $(this).html() + "')").css({"background-color": "#777777"});
+				
+				$(this).remove();
+				$("#count_"+id).val($("td[name='submit_td_"+id+"'] .label").length);				
+
+		});
+
+
+
+	
+	//$(".label").click(function(){$(this).css({"background-color": "#333"});});
+	$(".typical_words").find(".label").click(function(){
+		var id = $(this).parent(".typical_words").attr("name");
+
+		var len = $("td[name='submit_td_"+id+"']").find(".selected_words .label").length;
+		
+		var old_color = $(this).css("background-color");
+		
+		$(this).css({"background-color": "#333"});
+		if(len%4 == 0 && len != 0){
+			$("td[name='submit_td_"+id+"']").find(".selected_words").append($("<br />")).append( $(this).clone());
+		}else{
+			$("td[name='submit_td_"+id+"']").find(".selected_words").append( $(this).clone());
+		}
+		$("#count_"+id).val($("td[name='submit_td_"+id+"'] .label").length);
+
+
+		$("td[type='select_word'] .selected_words").children().click(function(){
+				
+				var other = $(".typical_words[name='"+id+"'] .label:contains('"+ $(this).html() + "')").html();
+				$(".typical_words[name='"+id+"'] .label:contains('"+ $(this).html() + "')").css({"background-color":old_color});
+				
+				$(this).remove();
+				$("#count_"+id).val($("td[name='submit_td_"+id+"'] .label").length);				
+
+		});
+
+
+	});
+
+
+
+	$("a.submit_button").click(function(){
+		var id = $(this).attr("id").substring(7);
+		
+		var words = "";
+		$("p[name='select_p_"+id+"']").children().each(function(){ 
+			if( $.trim($(this).html()).length > 0 ){
+			words += $.trim($(this).html()) + "," ;
+		}
+		});
+		words = words.substring(0, words.length - 1);
+		var min_len = $("#count_"+id).val();
+		var label_name = $("#label_"+id).val();
+		if($.trim(label_name) == "" || min_len == 0 || $.trim(words)=="" ){
+			Dialog.alert("请仔细检查您的输入");
+			return;
+		}
+		//TODO
+		$.ajax({
+				url: "/submit_token",
+				data: {"topic_id":id, "words":words, "min_len":min_len, "label_name":label_name},
+				cache: false,
+				async: true,
+				type: 'GET',
+				dataType: 'text',
+				timeout: 10000,
+				error: function() {
+					Dialog.alert('对不起，服务器响应超时，请联系管理员');
+				},
+				success: function(data) {
+					if(data == "success"){
+						Dialog.alert("提交成功！");
+
+
+					}else if (data == "too_long_min_len"){
+						Dialog.alert("对不起,不能提交,请确保最小匹配词数 小于等于 实际词数");
+					}
+				}
+			});	
+			
+
+	});
+
+	});    	
+	
+	/**
+	$("img[name=student_del]").click(function(){
+		var id  = $(this).attr("title");
+		var tid = $(this).attr("tid");
+		Dialog.open({
+		Animator: false,
+		Width: 200,
+		Height: 50,
+		Title: '请输入用户密码',
+		InnerHtml: '<h1>请输入用户密码</h1><div style="background: #dddddd;"><input type="password" id="passwd"></input></div>',
+		OKEvent: function() {
+			var passwd = $("#passwd").val();
+
+			$.ajax({
+				url: "/delete_choice",
+				data: {"id":id, "password":passwd},
+				cache: false,
+				async: true,
+				type: 'GET',
+				dataType: 'text',
+				timeout: 10000,
+				error: function() {
+					Dialog.alert('对不起，服务器响应超时，请联系管理员');
+				},
+				success: function(data) {
+					if(data == "success"){
+						num = parseInt($.trim($("#teacher_student_num_"+tid).html())) - 1;
+						//alert(num);
+						$("#teacher_student_num_"+tid).html(num);
+						//alert(num);
+						Dialog.alert("删除成功,可以重选导师了");
+
+						$("#student_"+id).hide();
+					}else{
+						Dialog.alert("你的密码输入错误");
+					}
+				}
+			});	
+			Dialog.close();
+			}
+		});
+		/**
+		
+
+
+		window.location = '/delete_choice?id='+id;
+		});
+		**/
+	
+
+	
+
+function submitAdd(id){
+	var label_txt = $("#label_"+id).val();
+	alert(label_txt);
+}
+
+</script> 
+
+</head>
+
+<body>
+<p><div style="text-align:center;"><h1>Topic Model</h1></div></p>
+<div class="toolbar">
+
+<table class="grid">
+		<thead>
+			<tr>
+				
+				<th width="10%"><span>topic id</span></th>
+				<th width="15%"><span>topic name</span></th>
+				<th width="500px"><span>topic typical words</span></th>
+				<th width="500px"><span>stock</span></th>
+				<th width="30%"><span>typical url</span></th>
+				<th width="5%"><span>train date</span></th>
+
+			</tr>
+		</thead>
+		<tbody>
+			
+			{% for model_entry in model_list %}
+				{% autoescape off %} 
+				<tr id="{{ model_entry.id }}" title="{{ model_entry.name }}">
+					
+					<td><span>{{ model_entry.topic_id }}</span></td>
+					<td type='select_word' name='submit_td_{{ model_entry.id }}'><span>
+
+						
+
+						<input class='short-text' type='text' id='label_{{ model_entry.id }}' value="{{ model_entry.label_name }}"> </input>
+						<input size='2' type='text' id='count_{{ model_entry.id }}' value="{{ model_entry.min_len }}"> </input></span>  
+						<a class="submit_button" id="submit_{{ model_entry.id }}"><img src="/res/icons/16x16/user_add.png" />提交</a> <br />
+						<p name="select_p_{{ model_entry.id }}" class='selected_words'>{{ model_entry.label_words }}</p>
+
+					 </td>
+
+
+					<td  class='typical_words' name='{{ model_entry.id }}'>
+					
+						{{ model_entry.topic_typical_words }}
+					
+					</td>
+					<td>
+						{{ model_entry.stocks }}
+					</td>
+					<td><strong>典型url：</strong><br /><span>{{ model_entry.topic_typical_urls }}</span></td>
+					<td><span>{{ model_entry.train_date }}</span></td>
+				</tr>			
+				{% endautoescape %} 
+			{% endfor %}
+
+		</tbody>
+</table>
+</div>
+</body>
+
+</html>

@@ -1,0 +1,208 @@
+<html>
+<head>
+<title>财经_热门话题发现</title>
+<meta http-equiv="content-type" content="text/html;charset=utf-8" />
+
+<script type="text/javascript" src="/res/js/jquery-ui-1.10.4/js/jquery-1.10.2.js"></script>
+<script type="text/javascript" src="/res/js/list/list.js"></script>
+<script type="text/javascript" src="/res/js/highlight/highlight.js"></script>
+<script type="text/javascript" src="/res/js/contextmenu/jquery.contextmenu.js"></script>
+<script type="text/javascript" src="/res/js/zdialog/zDrag.js"></script>
+<script type="text/javascript" src="/res/js/zdialog/zDialog.js"></script>
+<script type="text/javascript" src="/res/js/utils/json2.js"></script>
+<script type="text/javascript" src="/res/js/utils/string_utils.js"></script>
+
+
+<script type="text/javascript" src="/res/js/bootstrap/bootstrap.min.js"></script>
+
+<!-- jquery ui -->
+<link rel="stylesheet" href="/res/js/jquery-ui-1.10.4/css/redmond/jquery-ui-1.10.4.custom.css" />
+
+<script src="/res/js/jquery-ui-1.10.4/js/jquery-ui-1.10.4.custom.js"></script>  
+
+
+<link rel="stylesheet" type="text/css" href="/res/skin/all.css" />
+<link rel="stylesheet" type="text/css" href="/res/topic/topic.css" />
+<script>   	
+function submitAdd(id){
+	var label_txt = $("#label_"+id).val();
+	alert(label_txt);
+}
+</script> 
+<style type="text/css">
+	.button input,.button label{
+		margin: 0;
+		padding: 0;
+	}
+	.button{
+		position: relative;
+		width: 1000px;
+	}
+	.button_main{
+		display: inline-block;
+		vertical-align: middle;
+	}
+	.button span.sp1{
+		vertical-align: middle;
+		font-size: 30px;
+
+	}
+</style>
+</head>
+<body>
+
+<div style="width:100%;position:relative;">
+<div class="mask_body" style="position:absolute;z-index:100;opacity: 0;width:100%;height:100%;background-color:Gray;left:0;top:0;display:block;text-align:center;"><p style="font-size:30px;padding-top:150px;display:block;">正在刷新,请稍等...<p></div>
+<div style="text-align:center;">
+	<h1>Topic Model</h1>
+	<hr>
+</div>
+<div class="content" >
+	<div class="button">
+		{% ifequal order_score 0 %}
+			<input type="checkbox" id="checkbox_00" class="checkbox_00" />
+			<label for="checkbox_00"><a class="page_a1 page_a" href="/topic/?order_score=1">排序状态(<span>未排序</span>)</a></label>
+		{% else %}
+			<input type="checkbox" checked="checked" id="checkbox_00" class="checkbox_00"/>
+			<label for="checkbox_00"><a class="page_a2 page_a" href="/topic/">排序状态(<span>已排序</span>)</a></label>
+		{% endifequal %}
+		<span class="sp1">{</span>
+		<div class="button_main">
+			<div class="button_main1">
+			<span>留下:</span>
+			<input type="checkbox" checked="checked" id="checkbox_01" class="checkbox_01"/>
+			<label for="checkbox_01">旧概念</label>
+			<input type="checkbox" checked="checked" id="checkbox_02" class="checkbox_02"/>
+			<label for="checkbox_02">人工标注主题</label>
+			<input type="checkbox"  checked="checked" id="checkbox_03" class="checkbox_03"/>
+			<label for="checkbox_03">未标明主题</label>
+		</div>
+		<div class="button_main2">
+			<span>删除:</span>
+			<input type="checkbox" checked="checked" id="checkbox_04" class="checkbox_04"/>
+			<label for="checkbox_04">旧概念</label>
+			<input type="checkbox" checked="checked" id="checkbox_05" class="checkbox_05"/>
+			<label for="checkbox_05">人工标注主题</label>
+			<input type="checkbox"  checked="checked" id="checkbox_06" class="checkbox_06"/>
+			<label for="checkbox_06">未标明主题</label>
+		</div>
+		</div>
+		<span class="sp1">}</span>
+	</div>
+			{% for model_entry in model_list %}
+			{% autoescape off %}
+				<div class="wrap">
+					<div class="cont_top" data-id="{{ model_entry.id }}">
+						<span class="cont_top_id" style="float:left;margin-right:100px;">topic_{{ model_entry.id }} </span>
+						<span class="cont_top_bluename" style="color:blue;font-size:30px;float:left;">{{ model_entry.old_concept_label }}</span>
+						<span class="model_buttonname" style="font-size: 30px;font-weight: bold;float: left;">  {{ model_entry.label_name }}</span>
+								<span style="font-size: 32px;float: left;">{</span>
+							<ul class="cont_top_ul">
+								<li style="margin-bottom:8px;">
+									{% for ee in model_entry.important_word %}
+									<span class="label label-default div_h" style="height:10px;with:10px;"> {{ ee }}  </span>
+									{% endfor %}
+								</li>
+
+								<li>
+									{% for bb in model_entry.keyword %}
+									<span class="label label-default div_h" style="height:10px;with:10px;background:#e9eaea;color:#777;"> {{ bb }}  </span>
+									{% endfor %}
+								</li>
+								<li style="border-bottom:1px solid black;height: 1px;margin: -3px 0;"></li>
+								</ul>
+						<span style="font-size: 32px;float: left;" > } </span>
+						</span>
+					</div>
+					<div class="bottom">
+						<div class="container">
+							<div class="list" id="" style="left:-1000px">
+								<ul class="aaa">
+									<li> </li>
+					   				{% for ss in model_entry.abstract %}
+					                <li>{{ ss }}</li>
+					                {% endfor %}
+								</ul>
+							</div>
+							<a href="javascript:void(0);"  class="arrow prev">&lt;</a>
+							<a href="javascript:void(0);"  class="arrow next">&gt;</a>
+						</div>
+					</div>
+				</div>
+			{% endautoescape %} 
+		{% endfor %}		
+	
+<!-- 				<div class="wrap">
+					<div class="cont_top" data-id="0">
+						<span> model_entry.label_name</span><span> model_entry.topic_typical_words_three </span>
+					</div>
+					<div class="bottom">bbbbbbbbbbbbbbbbbbbbb</div>
+				</div> -->
+</div>
+<div class="cont_data" id="cont_data">
+	<table class="grid">
+		<thead>
+			<tr>
+				<th class="grid_th" width="180px"><span>topic name</span></th>
+				<th class="grid_th" width="200px"><span>topic typical words</span></th>
+				<th class="grid_th" width="200px"><span>stock</span></th>
+				<th class="grid_th" width="48%"><span>typical url</span></th>
+<!-- 				<th width="171px"><span>train date</span></th> -->
+			</tr>
+		</thead>
+		<tbody>
+				<tr id="{{ model_entry.id }}" title="{{ model_entry.name }}" class="model"> 
+					<td type='select_word' class="select_wordd grid_td" name='submit_td_{{ model_entry.id }}'><span>
+						<input class='short-text' type='text' id='asd' value=""> </input>
+						<input size='2' type='text' class="len" id='count_{{ model_entry.id }}' value="{{ model_entry.min_len }}">
+						</span>  
+						<a class="submit_button" id="asd"><img src="/res/icons/16x16/user_add.png" />提交</a> <br />
+						<p name="select_p_{{ model_entry.id }}" class="selected_words"> </p>
+					</td>
+					<td  class='typical_words grid_td' name='{{ model_entry.id }}'>
+					
+						{{ model_entry.topic_typical_words }}
+					
+					</td>
+					<td class="stocks grid_td">
+							asd
+					</td>
+					<td class="grid_td">
+						<ul class="url">
+							<li class="url1">thetce
+							</li>
+							<li class="url2">main
+							</li>
+						</ul>
+						<ul>
+							<li>
+								<div class="name1" >
+									<ul class="pro">
+										<li class="pro-z"></li>
+<!-- 										<li class="pro-o"></li> -->
+									</ul>
+								</div>
+							</li>
+							<li>
+								<div class="name2" style="display:none;">
+									<ul class="pro">
+										<li class="pro-t"></li>
+										<li class="pro-for"></li>
+										<li class="pro-fiv"></li>
+									</ul>
+								</div>
+							</li>
+						</ul>
+					</td>
+<!-- 					<td><span>asd</span></td> -->
+				</tr>		
+		</tbody>
+	</table>
+	<div class="mask" style="position:absolute;opacity: 50%;width:100%;height:100%;background-color:Gray;left:0;top:0;"><p style="font-size:30px;padding-top:150px;">正在响应,请稍等...<p></div>
+</div>
+</div>
+
+<div class="none" style="display:none;"></div>
+<script type="text/javascript" src="/res/topic/topic.js"></script>
+</body>
+</html>

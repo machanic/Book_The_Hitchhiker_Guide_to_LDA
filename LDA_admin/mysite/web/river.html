@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="utf-8">
+    <title>财经_新词热度演化</title>
+    <link rel="stylesheet" href="/res/river/css/ui.datepicker.css" type="text/css">
+    <style type="text/css">
+        *{
+        margin: 0;
+        padding: 0;
+        }
+        img{
+            cursor: pointer;
+        }
+        body{
+            background-color: #eee;
+        }
+        ul{
+            list-style: none;
+        }
+        .clearfix:after {visibility: hidden;display: block;font-size: 0;content: " ";clear: both;height: 0;}
+        .head{
+            width: 100%;
+            position: relative;
+            background-color: #508cc8;
+            margin-bottom: 20px;
+
+        }
+        .content{
+            width: 1000px;
+            margin: 0 auto;
+        }
+        .head_con{
+            text-align: center;
+        }
+        .head_con > h2{
+        /*  background: url("img/logo.jpg") no-repeat 350px 6px;*/
+            height: 60px;
+            line-height: 60px;
+            font-size: 2em;
+            color: #f1f1f1;
+        }
+        .main_content{
+            background-color: #fff;
+            margin: 0 auto;
+          
+        }
+        .date > span{
+            /*display: inline-block;*/
+            height: 20px;
+            line-height: 20px;
+            padding-left: 10px;
+            border-left: 3px solid #508cc8;
+            font-size: 18px;
+            color: #666;
+            margin-right: 10px;
+         /*   position: absolute;*/
+           /* float: left;*/
+        }
+        .date{
+            margin-bottom: 40px;
+            border-bottom: 1px solid #c6dbef;
+            padding: 10px 0 10px;
+            /*position: relative;*/
+        }
+        .date > input{
+            margin-left: 10px;
+        }
+        .date > input.start{
+            margin-right: 40px;
+
+        }
+        .date > button{
+            width: 80px;
+            height: 24px;
+            line-height: 24px;
+            font-size: 14px;
+            text-align: center;
+            border: 0;
+            color: #fff;
+            background-color: #508cc8;
+            cursor: pointer;
+            margin-left: 20px;
+        }
+        .main_part1{
+            height: 56px;
+            line-height: 56px;
+            width: 100%;
+            background-color: #eceff4;
+            border: 1px solid #c6dbef;
+            border-top: 2px solid #508cc8;
+
+        }
+        .main_part1 > p {
+            font-size: 20px;
+            color: #666;
+        }
+        .wid{width:1400px;}
+        #menu,.word{
+            display: inline;
+        }
+        .check>ul,.check{
+            display: inline;
+        }
+        .check>ul>li{
+            float: right;
+            font-size: 20px;
+            padding: 0 5px;
+        }
+    </style>
+
+</head>
+<body>
+    <!-- header -->
+    <div class="head">
+        <div class="content head_con">
+            <h2>newword_timeline RiverCharts</h2>
+        </div>
+    </div>
+    <!-- header end -->
+    <!-- main start -->
+    <div class="wid main_content ">
+        <div class="main_part1"><p>事件河流展示图</p></div>
+        <div class="date clearfix">
+                    <span>按日期查询</span>
+                    <div id="menu">
+                        <!-- <select name="tunit" id="tunit">
+                            <option value="day">天</option>
+                            <option value="hour">小时</option>                                    
+                        </select> -->
+                    </div>
+                    <div class="check ">
+                        <ul class="check_ul">
+                                <li>
+                                    <input type="radio"  name="category" value="cluster" data-tag="cluster" id="radio_01">
+                                    <label for="radio_01">cluster</label>
+                                </li>
+                                <li>
+                                    <input type="radio" name="category" checked="checked" value="integration" data-tag="integration" id="radio_02">
+                                    <label for="radio_02">integration</label>
+                                </li>
+                                <li>
+                                    <input type="checkbox" id="checkbox_01" data-tag="cut" checked="checked">
+                                    <label for="checkbox_01">cut</label>
+                                </li>
+                                <li>
+                                    <select name="uuu" id="river_word">
+                                        <option value="single">single</option>
+                                        <option value="compond">compond</option>
+                                        <option value="ss">ss</option>                                      
+                                    </select> 
+                                </li>
+
+                        </ul>
+                    </div> 
+                    开始日期:<input type="text" class="start" id="startdt" name="startdt" value="" style="width:90px">
+
+                    结束日期:<input type="text" class="end" id="enddt" name="enddt" value="" style="width:90px">
+
+                    <button class="sure">生成绘图</button>
+                    <div class="word">
+                        
+                    </div>
+        </div>
+        <div class="checks">
+                               
+        </div>
+        <div id="main" style="height:800px;width:100%"></div>
+        <div class="bottom" style="height:20px;"></div>
+        
+    </div>
+    <!-- main end -->
+    <script type="text/javascript" src="/res/river/js/jquery.min.js"></script>
+    <script type="text/javascript" src="/res/river/js/ui.datepicker.js"></script>
+    <script type="text/javascript" src="/res/river/js/ui.datepicker-zh-CN.js"></script>
+    <script src="/res/river/js/echarts.js"></script>
+    <script type="text/javascript">
+        // 路径配置
+        require.config({
+            paths: {
+                echarts: '/res/river/js'
+            }
+        });
+        
+        // 使用
+        require(
+            [
+                'echarts',
+                'echarts/dark',
+                'echarts/chart/eventRiver'
+                
+            ],
+            function (ec,theme) {
+                // 基于准备好的dom，初始化echarts图表
+                var myChart = ec.init(document.getElementById('main'),theme); 
+                var odata = {};
+                $(document).ready(function(){
+                    var dirpath = "single";
+                    var initialise = {};
+                    var world = true;
+                    var worldd = true;
+                    $("#startdt,#enddt").datepicker();
+
+                    var time_today = new Date();
+                    var time_lastday = converDate(new Date(time_today.getTime() - 3600000*24*4));
+                    time_today = converDate(time_today);
+                    // $('.start').prop('value',time_lastday);
+                    // $('.end').prop('value',time_today);
+
+                    var newstart = '';
+                    var newend = '';
+
+                    function check(){
+                        var newstart = new Date($('.start').val());
+                        var newend = new Date($('.end').val());
+                        if(newend.getTime() - newstart.getTime() < 0 ){
+                            alert('结束日期不得大于起始日期');
+                            return false;
+                        }else if(newend.getTime() > new Date().getTime() || newstart.getTime() > new Date().getTime()){
+                            alert('时间不得大于当日时间');
+                            return false;
+                        }
+                        return true;
+                    }
+                        
+                                    var option = {
+                                            title : {
+                                                text: 'newword_timeline River',
+                                                subtext: '真实数据'
+                                            },
+                                            tooltip : {
+                                                trigger: 'item',
+                                                enterable: true
+                                            },
+                                            legend: {
+                                                data:[]
+                                            },
+                                           
+                                            toolbox: {
+                                                show : true,
+                                                feature : {
+                                                    mark : {show: true},
+                                                    restore : {show: true},
+                                                    saveAsImage : {show: true}
+                                                }
+                                            },
+                                            xAxis : [
+                                                {
+                                                    type : 'time',
+                                                    boundaryGap: [0.05,0.1],
+                                                    
+                                                }
+                                            ],
+                                            series : [],
+                                            color: ['#2ec7c9','#afbd11','#dc69aa']                                
+                                        };
+
+                                                                    
+                 
+                    $('.sure').on('click',function(){
+                        myChart.showLoading({
+                                        text: '正在努力的读取数据中...',
+                                    });
+                        var ajstartdate = ajDate(new Date($('.start').val()));
+                        var ajenddate = ajDate(new Date($('.end').val()));
+                        $('#checkbox_01').attr("checked","checked");
+                        $('#radio_02').attr("checked","checked");
+                        var che = check();
+                        if(che){
+                            $.ajax({
+                                url: "/newword_timeline",
+                                dataType: 'json',
+                                type:'GET',
+                                data: {
+                                    start_date:ajstartdate,
+                                    end_date:ajenddate,
+                                    cluster:"false",
+                                    cut:"true",
+                                    dirpath:dirpath
+                                    },
+                                error: function(){
+                                        alert('对不起，您选择的时间跨度暂无数据');
+                                    }
+                                })
+                                .done(function( data ){
+                                    if(data.length === 0){
+                                        alert("您选择的时间内暂无数据，请选择其他时间；");
+                                        return;
+                                    }
+                                    odata = data;
+ 
+                                    var serdata=[];
+                                    var lengenddata=[];
+                                    //第一次取前3个
+                                    for(var i=0;i<3;i++){
+                                        if(odata[i]){
+                                            serdata.push(odata[i]);
+                                            lengenddata.push(odata[i].name);
+                                        }
+                                        
+                                    }
+ 
+                                    
+                                    myChart.hideLoading();
+                                    option.series.length='';
+                                    option.series=serdata;
+                                    option.legend.data = '';
+                                    option.legend.data = lengenddata;
+                                    myChart.clear();
+                                    myChart.setOption(option);
+                                    //绘图完毕，开始造 select
+                                        var oname = [];//option 
+                                        var oflag=0;
+                                        var onum = parseInt(odata.length/3)+1;
+                                        for(var i=0;i<onum;i++){
+                                            var ostr='';
+                                            var tnum=0;
+                                            tnum = oflag + 3;
+                                            for(var j=oflag;j<tnum;j++){
+                                                oflag++;
+                                                if(odata[j]){
+                                                    ostr += odata[j].name+'&nbsp;&nbsp;:&nbsp;&nbsp;'+'';
+                                                }
+                                                else{
+                                                    break;
+                                                }
+                                            }
+                                             oname.push(ostr);
+                                        }
+                                        var oselect = $("<select></select>");
+                                        $(oselect).attr('id','se')
+                                        var ooption = '';
+                                        for(var i=0;i<oname.length;i++){
+                                            ooption += "<option data-page="+i+">"+oname[i]+"</option>";
+                                        }
+                                        $(oselect).append(ooption);
+                                        $(oselect).addClass('sel');
+                                        $('#menu').empty();
+                                        $("#menu").append(oselect);
+                                        
+                                        if(world){
+                                            $("#menu").unbind();
+                                            $("#menu").on("change","select",function(){
+                                                 var tstr = $(this).val();
+                                                 var arr_str = tstr.split(':');
+                                                 arr_str.pop();
+                                                 var changedata=[];
+                                                 changedata.length=0;
+                                                 var changetitle=[];
+                                                 changetitle.length=0;
+                                                 for(var i=0;i<arr_str.length;i++){
+                                                    arr_str[i] = arr_str[i].trim();
+                                                 }
+
+                                                    for(var i=0;i<odata.length;i++){
+                                                        for(var j=0;j<arr_str.length;j++){
+                                                            if(odata[i].name===arr_str[j]){
+                                                                changedata.push(odata[i]);
+                                                                changetitle.push(odata[i].name);
+                                                            }
+                                                        }
+
+                                                    }
+                                                    
+                                                    option.series.length = 0;
+                                                    option.series = changedata;
+                                                    option.legend.data = '';
+                                                    option.legend.data = changetitle;
+                                                    
+                                                    myChart.showLoading({
+                                                            text: '正在努力的读取数据中...',
+                                                        });
+                                                    myChart.hideLoading();
+                                                    myChart.clear(); //必须先清空画布
+                                                    myChart.setOption(option);
+                                               
+                                                
+                                            });
+                                            world = false;
+                                        }
+
+                                        if(worldd){
+                                            $('.check').on('change','input',function(){
+                                             myChart.showLoading({
+                                                    text: '正在努力的读取数据中...',
+                                                }); 
+                                                var othis = $(this);
+                                                var ocluster = $(this).attr('data-tag');
+                                                var cut = true;
+                                                var cluster = false;
+                                                if($('#checkbox_01').is(":checked")){
+                                                    cut=true;
+                                                }else{
+                                                    cut=false;
+                                                }
+                                                if($('#radio_02').is(":checked")){
+                                                    cluster = false;
+                                                }else{
+                                                    cluster = true;
+                                                }
+                                                if(ocluster==="cut"){
+                                                    if(othis.is(":checked")){
+                                                        cut=true;
+                                                    }else{
+                                                        cut=false;
+                                                    }
+                                                }else if(ocluster==="cluster"){
+                                                    cluster = true;
+                                                }else if(ocluster==="integration"){
+                                                    cluster = false;
+                                                }else{
+                                                    alert("系统错误，请联系管理员");
+                                                }
+                                                
+                                                var ckstarttime = $(".start").val();
+                                                var ckendtime = $(".end").val();
+                                                ckstarttime = ajDate(new Date(ckstarttime));
+                                                ckendtime = ajDate(new Date(ckendtime)); 
+                                                // console.log("cut:"+cut+"cluster:"+cluster+"start:"+ckstarttime+"end:"+ckendtime+"dirpath:"+dirpath);
+
+                                                $.ajax({
+                                                    url : "/newword_timeline",
+                                                    dataType : "json",
+                                                    type : "GET",
+                                                    data : {
+                                                        start_date : ckstarttime,
+                                                        end_date : ckendtime,
+                                                        cluster : cluster,
+                                                        cut : cut,
+                                                        dirpath:dirpath
+                                                    }
+                                                })
+                                                .done(function(data){
+                                                    odata = data;
+                                                    var o_str = $("#se").val();
+                                                    
+                                                    var oarr_str = o_str.split(':');
+                                                   
+                                                    oarr_str.pop();
+                                                    var changedata = [];
+                                                    var changetitle = [];
+                                                    changedata.length=0;
+                                                    changetitle.length=0;
+                                                    for(var i=0;i<oarr_str.length;i++){
+                                                        oarr_str[i] = oarr_str[i].trim();
+                                                    }
+                                                    for(var i=0;i<odata.length;i++){
+                                                        for(var j=0;j<oarr_str.length;j++){
+                                                            
+                                                            if(odata[i].name===oarr_str[j]){
+                                                                changedata.push(odata[i]);
+                                                                changetitle.push(odata[i].name);
+                                                            }
+                                                        }
+                                                    }
+                                                    option.series.length = 0;
+                                                    option.series = changedata;
+                                                    option.legend.data = '';
+                                                    option.legend.data = changetitle;
+                                                    
+                                                    myChart.showLoading({
+                                                            text: '正在努力的读取数据中...',
+                                                        });
+                                                    myChart.hideLoading();
+                                                    myChart.clear();
+                                                    myChart.refresh();
+                                                    myChart.setOption(option);
+                                                });
+
+                                            })
+                                            worldd = false;
+                                        }
+
+
+                                });
+                        }
+                          world = true;
+                    });
+                    function new_start(){
+                        $.ajax({
+                            url : "/newword_timeline_default",
+                            type : "GET",
+                            dataType : "json",
+                            data : {
+                                dirpath : dirpath
+                            }
+                        })
+                        .done(function(data){
+                            initialise = data;
+                            $('.start').prop("value",converStr(initialise.start_date));
+                            $('.end').prop("value",converStr(initialise.end_date));
+
+                            newstart = new Date($('.start').val());
+                            newend = new Date($('.end').val());
+
+                            $('.sure').click();
+                        });
+                    }
+                    new_start();
+                    
+                    $("#river_word").on('change',function(){
+                        world = true;
+                        dirpath = $(this).val();
+                        new_start();
+                    });
+                    
+                    
+
+                    
+
+
+
+
+
+
+                
+                }); 
+                function converDate( date ){
+                        var year = date.getFullYear(),
+                            month = ('0' + ( date.getMonth() + 1)).slice(-2),
+                            day = ('0' + date.getDate()).slice(-2);
+                        return year + '-' + month + '-' + day;
+                    }
+                function ajDate( date ){
+                        var year = date.getFullYear(),
+                            month = ('0' + ( date.getMonth() + 1)).slice(-2),
+                            day = ('0' + date.getDate()).slice(-2);
+                        return year  + month  + day;
+                    }
+                function converStr( str ){
+                    var ostr = str.slice(-2);
+                    var tstr = str.slice(-4,-2);
+                    var fstr = str.slice(0,4);
+                    return fstr + '-'+ tstr + '-' + ostr;
+                }   
+            }
+        );
+    </script>
+</body>

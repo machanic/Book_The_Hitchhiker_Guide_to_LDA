@@ -1,0 +1,222 @@
+//也可以从class或者xml直接导入静态变量做为全局变量
+//全局变量导入完毕
+{
+	
+	"hdfs_loc":"${fs.default.name}",
+	
+	
+	"time" : "`import com.sina.cre.hadoop.util.TimeUtil;timeLong=TimeUtil.getTime();TimeUtil.getIntervalStartTime(timeLong, 60)`",
+	"time_interval" : "60",
+	"conf":{}, 
+	
+	
+	"tasks":{
+		"hour":["minute_item_raw", "minute_item_new","minute_meta_model","minute_user_new","minute_user_merge"],
+		"day":["minute_user_merge","day_user_merge"],
+	},
+	
+	"jobs":{
+		
+		"minute_item_raw":{
+			"conf":{
+				"_sina_time_":"${time}",
+				"_sina_nothing":"",
+			},
+			"inputStore":"${hdfs_loc}/${STORE_PATH}/item/raw",
+
+			"job_name":"log raw : ${time}",
+			"conf": {"_sina_time_":"${time}", "_sina_nothing":""},
+			
+			"code":"minute_item_raw",
+			<%
+			#!js
+			importPackage(com.sina.cre.hadoop.util);
+			importPackage(org.codehaus.jettison.json);
+			var time_paths = TimeUtil.getTimefolder(TimeUtil.getTime(), ${time_interval});
+			var mapper = [];
+			for(var i = 0; i < time_paths.size() ; i++){
+				mapper.push({"class":"com.sina.cre.hadoop.rawdata.mapper.WapMapper", "input_path":"${hdfs_loc}/${WAP_PATH}/"+time_paths.get(i)});
+				mapper.push({"class":"com.sina.cre.hadoop.rawdata.mapper.SudaMapper", "input_path":"${hdfs_loc}/${SUDA_PATH}/"+time_paths.get(i)});
+				mapper.push({"class":"com.sina.cre.hadoop.rawdata.mapper.RemarkMapper", "input_path":"${hdfs_loc}/${REMARK_PATH}/"+time_paths.get(i)});
+			}
+			parent.put("mapper",mapper);
+			%>
+			"mapper":[],
+			"reducer":"com.sina.cre.hadoop.reducer.CommonAddIntReducer",
+			"reduce_count":10,
+			"key_class":"string",
+			"value_class":"int",
+			"out_path":"${hdfs_loc}/${TMP_PATH}/${time}/item"
+		},
+	
+		"minute_item_new":{
+			"conf":{
+				"_sina_time_":"${time}",
+				"_sina_hign_count_":"1024",
+			},
+
+			"job_name":"item new : ${time}",
+			"mapper":[{"class":"com.sina.cre.hadoop.process.mapper.ItemNewMapper", "input_path":"${hdfs_loc}/${TMP_PATH}${time}/raw" }],
+			"combiner":"com.sina.cre.hadoop.reducer.TypeFeatureAddCombinner",
+			"reducer":"com.sina.cre.hadoop.reducer.TypeFeatureAddReducer",
+			"group_comparator":"com.sina.cre.hadoop.bean.KeyFeatureGroupingComparator",
+			"partitioner":"com.sina.cre.hadoop.bean.KeyTypeFeaturePartitioner",
+			"reduce_count":10,
+			"key_class":"com.sina.cre.hadoop.bean.KeyTypeFeaturePair",
+			"value_class":"com.sina.cre.hadoop.bean.TypeFeatureValueWritable",
+			"out_path":"${hdfs_loc}/${TMP_PATH}${time}/item",
+
+
+			
+		},
+	
+		"minute_meta_model":{
+
+			"code":"xx1",
+
+			<% 
+			#!js
+			var test_cctv = "cctv${code}";
+			parent.put("cctv" , 123);
+			
+
+			%>
+			
+			"tv":"${test_cctv}",
+			"job_name":"item raw : ${time}",
+			"inputStore":"${hdfs_loc}/${STORE_PATH}/item",
+			
+			"timeFolder":"`TimeUtil.getNowTimefolder(timeLong, 60)`",
+			
+			"named_output":["${FEATURE}", "${NEW}", "${OLD}"], 
+
+			"mapper":[{"class":"com.sina.cre.hadoop.process.mapper.MetaMapper", "input_path":"${hdfs_loc}/${META_PATH}${timeFolder}/mds_sinarecmd_meta_all"},
+					  {"class":"com.sina.cre.hadoop.process.mapper.ModelOMapper", "input_path":"${inputStore}/${OLD}"},
+					  {"class":"com.sina.cre.hadoop.process.mapper.ModelOMapper", "input_path":"${inputStore}/${NEW}"},
+					  {"class":"com.sina.cre.hadoop.process.mapper.ModelNMapper", "input_path":"${hdfs_loc}/${TMP_PATH}${time}/item"}
+					 ],
+			"reducer":"com.sina.cre.hadoop.reducer.MetaModelReducer",
+			"reduce_count":10,
+			
+			"key_class":"string",
+			"value_class":"com.sina.cre.hadoop.bean.TypeFeatureWritable",
+			"out_path":"${hdfs_loc}/${TMP_PATH}${time}/model",
+	
+			
+			"move":[{"from":"${out_path}/${OLD}", "to":"${inputStore}/${OLD}"},
+						 {"from":"${out_path}/${NEW}", "to":"${inputStore}/${NEW}"},],
+
+			"copy":[{"from":"${inputStore}", "to":"${hdfs_loc}/${RESULT_PATH}/model/${timeFolder}"},
+						 {"from":"${hdfs_loc}/${STORE_PATH}/SUCCESS","to":"${hdfs_loc}/model/${timeFolder}/SUCCESS"}],
+
+			"hdfs_operator":["move","copy"],
+		},
+	
+
+		"minute_user_new":{
+			"job_name":"user new : ${time}",
+			"conf":{"_sina_time_":"${time}", "_sina_user_config_":"${hdfs_loc}/${TMP_PATH}${time}/model/${FEATURE}", "_sina_hign_count_":"1024", "_sina_max_count_":"512", },
+			
+			"mapper":[{"class":"com.sina.cre.hadoop.process.mapper.UserHashMapper", "input_path":"${hdfs_loc}/${TMP_PATH}${time}/raw"} ,],
+			
+			"map_path":[ "${hdfs_loc}/${TMP_PATH}${time}/model/${FEATURE}" ],
+
+			"combiner":"com.sina.cre.hadoop.reducer.TypeFeatureAddCombinner",
+			"reducer":"com.sina.cre.hadoop.reducer.TimeTypeFeatureAddReducer",
+			"group_comparator":"com.sina.cre.hadoop.bean.KeyFeatureGroupingComparator",
+			"partitioner":"com.sina.cre.hadoop.bean.KeyTypeFeaturePartitioner",
+
+			"reduce_count":10,
+			
+			"key_class":"com.sina.cre.hadoop.bean.KeyTypeFeaturePair",
+			"value_class":"com.sina.cre.hadoop.bean.TypeFeatureValueWritable",
+			"out_path":"${hdfs_loc}/${TMP_PATH}${time}/user",	
+		},
+
+
+
+		"minute_user_merge_not_zero":{
+			"job_name":"meta model : ${time}",
+			"conf":{"_sina_time_":"${time}", "_sina_percent_":"1,0.5", "_sina_out_o_":"false", "_sina_out_t_":"true", "_sina_max_count_":"512"},
+			"named_output":["${TODAY}", "${NEW}"],
+			"todayPath":"${hdfs_loc}${STORE_PATH}user/`import org.apache.commons.lang.StringUtils;StringUtils.substring(\"${time}\", 0, \"20121212\".length());`/",
+			"mapper":[{"class":"com.sina.cre.hadoop.process.mapper.ModelNMapper", "input_path":"${hdfs_loc}/${TMP_PATH}${time}/user"},
+					  {"class":"com.sina.cre.hadoop.process.mapper.ModelTMapper", "input_path":"${todayPath}"},
+					 ],
+			"reducer":"com.sina.cre.hadoop.reducer.UserMergeReducer",
+			"reduce_count":10,
+			
+			"key_class":"string",
+			"value_class":"com.sina.cre.hadoop.bean.TypeFeatureWritable",
+			"out_path":"${hdfs_loc}/${TMP_PATH}${time}/store",
+	
+			
+			"move":[{"from":"${out_path}/${TODAY}", "to":"${todayPath}"},
+					],
+
+			
+
+			"hdfs_operator":["move"],
+		},
+
+		"day_user_merge":{
+			"job_name":"meta model: ${time}",
+			"yestoday":"`import com.sina.cre.hadoop.util.TimeUtil;TimeUtil.getYestoday(\"${time}\");`",
+			"yestodayPath":"${hdfs_loc}/${STORE_PATH}/user/${yestoday}/",
+
+			"conf":{"_sina_time_":"${time}", "_sina_percent_":"0,0.9", "_sina_out_o_":"true", "_sina_max_count_":"512", "_sina_out_n_":"true"},
+			"named_output":["${OLD}", "${NEW}"],
+			"inputStore":"${hdfs_loc}/${STORE_PATH}/user",
+			"mapper":[{"class":"com.sina.cre.hadoop.process.mapper.ModelOMapper", "input_path":"${inputStore}/${OLD}"},
+					  {"class":"com.sina.cre.hadoop.process.mapper.ModelOMapper", "input_path":"${inputStore}/${NEW}"},
+					   {"class":"com.sina.cre.hadoop.process.mapper.ModelNMapper", "input_path":"${yestodayPath}"},
+					 ],
+			"reducer":"com.sina.cre.hadoop.reducer.UserMergeReducer",
+			"reduce_count":30,
+
+			"key_class":"string",
+			"value_class":"com.sina.cre.hadoop.bean.TypeFeatureWritable",
+
+			"out_path":"${hdfs_loc}/${TMP_PATH}${yestoday}/store",
+			
+			"move":[{"from":"${out_path}/${OLD}", "to":"${inputStore}/${OLD}"},
+					{"from":"${out_path}/${NEW}", "to":"${hdfs_loc}${RESULT_PATH}/user${time}"},],
+
+			"copy":[{"from":"${hdfs_loc}${RESULT_PATH}/user${time}", "to":"${inputStore}/${NEW}"},
+					],
+
+			"hdfs_operator":["move","copy"],
+
+		},
+
+
+		"minute_item_hfile":{
+			"job_name":"item feature to hfile: ${time}",
+			"conf":{"_sina_time_":"${time}", "_sina_table_":"yy_items"},
+			"mapper":[{"class":"com.sina.cre.hadoop.process.mapper.HFileMapper", "input_path":"${hdfs_loc}/${STORE_PATH}item/n"},],
+			"hfile_outputformat":"true",
+			"value_class":"null",
+			"out_path":"${hdfs_loc}/${RESULT_PATH}/hfile/item/${time}",
+
+		},
+
+
+
+
+		"day_hifle":{
+			"job_name":"user feature to hfile: ${time}",
+			"conf":{"_sina_table_":"yy_users"},
+			"mapper":[{"class":"com.sina.cre.hadoop.process.mapper.HFileMapper", "input_path":"${hdfs_loc}/${STORE_PATH}/user/${NEW}"},],
+			"hfile_outputformat":"true",
+			"value_class":"null",
+			"out_path":"${hdfs_loc}/${TMP_PATH}hfile/"
+
+		},
+	},
+
+	
+	
+
+
+
+}

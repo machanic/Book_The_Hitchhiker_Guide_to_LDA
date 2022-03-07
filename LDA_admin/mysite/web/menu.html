@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>导航页</title>
+    <style type="text/css">
+    *{
+        margin: 0;
+        padding: 0;
+    }
+    body{
+        background-color: #eee;
+    }
+    .header{
+        margin: 0 auto;
+    }
+    .header h1 {
+        text-align: center;
+        margin: 20px 0 10px 0;
+    }
+    ul{
+        list-style-type: none;
+
+    }
+    .content > ul {
+
+        border: 1px solid black;
+        width: 300px;
+        margin: 20px 0 0 20px;
+        background-color: #fff;
+    }
+    .content > ul >li{
+       
+       padding: 0 20px;
+        height: 60px;
+        line-height: 60px;
+        font-size: 20px;
+        
+
+    }
+    .content > ul > li > a{
+        border-bottom: 1px solid #edf1f2;
+        display: inline-block;
+        text-decoration: none;
+        width: 260px;
+        height: 60px;
+        
+    }
+    .content > ul > li:hover{
+        background-color: #508cc8;
+        border:  #508cc8;
+    }
+    .content > ul > li >a:hover{
+        border:  #508cc8;
+        color: #fff;
+    }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>导航页</h1>
+        <hr>
+    </div> 
+    <div class="content">
+            <ul>
+                <li><a href="../topic/?order_score=1" target="_blank">Topic Model</a ></li>
+                <li><a href="force.html" target="_blank">Topic Charts</a></li>
+                <li><a href="word.html" target="_blank">newword_single</a ></li>
+                <li><a href="word_compond.html" target="_blank">newword_compond</a ></li>
+                <li><a style="border:none;" href="river.html" target="_blank">newword_river</a ></li>
+            </ul>
+    </div>
+
+<!--     <div class="main">
+        <iframe src="http://127.0.0.1:8000/other/" id="frame" width="100%"></iframe>
+    </div> -->
+
+ 
+</body>
+</html>

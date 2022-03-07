@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>力导向</title>
+    <link rel="stylesheet" type="text/css" href="/res/force/css/index.css">
+</head>
+<body>
+
+    <div id="main" style="height:1000px;width:100%;border:1px solid #999;"></div>
+    
+    <div id="menu">
+<!--         <select name="tunit" id="tunit">
+            <option value="day">天</option>
+            <option value="hour">小时</option>                                    
+        </select> -->
+    </div>
+
+
+
+
+    <script src="/res/force/js/require.js"></script>
+    <script>
+        require.config({
+            baseUrl: '/res/force/js',
+            paths: {
+                'jquery': 'jquery.min',
+                'echarts': 'echarts',
+                'echarts/chart/force' : 'echarts'
+            },
+            urlArgs: 'ver=' + Date.now()
+        });
+
+        require(['index'], function( index ){
+            
+        });
+    </script> 
+</body>
+</html>

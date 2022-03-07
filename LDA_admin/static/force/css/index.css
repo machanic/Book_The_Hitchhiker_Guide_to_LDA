@@ -1,0 +1,12 @@
+*{
+	margin:0;
+	padding:0;
+}
+#menu{
+	position: fixed;
+	top: 0px;
+	left: 0px;
+}
+#menu > select{
+	font-size: 10px;
+}
